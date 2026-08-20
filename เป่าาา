@@ -1,0 +1,224 @@
+-- สร้าง UI หน้าต่างเปลี่ยนเพลง Tool (เชื่อมต่อ RemoteEvent สมบูรณ์)
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+if playerGui:FindFirstChild("ToolMusicUI_PlayStop") then
+    playerGui.ToolMusicUI_PlayStop:Destroy()
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ToolMusicUI_PlayStop"
+screenGui.Parent = playerGui
+
+-- กรอบหลัก
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 260, 0, 175)
+frame.Position = UDim2.new(0.5, -130, 0.4, -87)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = screenGui
+
+-- ขอบเรืองแสงวิบวับ ขาว-ดำ
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 3
+stroke.Parent = frame
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = frame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 35)
+title.BackgroundTransparency = 1
+title.Text = "🎵 กันเจาะเปาสุดหล่อ (Pro)"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 14
+title.Font = Enum.Font.GothamBold
+title.Parent = frame
+
+-- ช่องใส่ ID เพลง
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(0, 220, 0, 32)
+textBox.Position = UDim2.new(0.5, -110, 0, 40)
+textBox.Text = "ช่องใส่เพลง"
+textBox.TextColor3 = Color3.fromRGB(150, 150, 150)
+textBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+textBox.TextSize = 13
+textBox.Font = Enum.Font.Gotham
+textBox.Parent = frame
+
+local boxCorner = Instance.new("UICorner")
+boxCorner.CornerRadius = UDim.new(0, 6)
+boxCorner.Parent = textBox
+
+-- จัดการข้อความอัจฉริยะ
+local lastSavedId = ""
+textBox.Focused:Connect(function()
+    if textBox.Text == "ช่องใส่เพลง" or textBox.Text == "" then
+        textBox.Text = lastSavedId
+        textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end
+end)
+
+textBox.FocusLost:Connect(function()
+    if textBox.Text == "" then
+        textBox.Text = "ช่องใส่เพลง"
+        textBox.TextColor3 = Color3.fromRGB(150, 150, 150)
+    else
+        lastSavedId = textBox.Text
+    end
+end)
+
+-- ป้ายข้อความแสดงชื่อเพลง
+local songNameLabel = Instance.new("TextLabel")
+songNameLabel.Size = UDim2.new(0, 220, 0, 25)
+songNameLabel.Position = UDim2.new(0.5, -110, 0, 80)
+songNameLabel.BackgroundTransparency = 1
+songNameLabel.Text = "🎶 กำลังเล่น: -"
+songNameLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+songNameLabel.TextSize = 12
+songNameLabel.Font = Enum.Font.Gotham
+songNameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+songNameLabel.Parent = frame
+
+-- ปุ่มสลับ เปิด / หยุด
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 220, 0, 35)
+button.Position = UDim2.new(0.5, -110, 0, 115)
+button.Text = "เปิด"
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+button.TextSize = 14
+button.Font = Enum.Font.GothamBold
+button.Parent = frame
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 6)
+btnCorner.Parent = button
+
+-- ปุ่ม Toggle เปิด-ปิดหน้าต่าง (ขนาด 60x60)
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0, 60, 0, 60)
+toggleBtn.Position = UDim2.new(0, 50, 0, 50)
+toggleBtn.Text = "🎵"
+toggleBtn.TextSize = 22
+toggleBtn.Active = true
+toggleBtn.Draggable = true
+toggleBtn.Parent = screenGui
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(1, 0)
+toggleCorner.Parent = toggleBtn
+
+-- ฟังก์ชันสร้างเสียงคลิกปุ่ม
+local function playClickSound()
+    local sound = Instance.new("Sound")
+    sound.SoundId = "rbxassetid://6042457193"
+    sound.Volume = 0.5
+    sound.Parent = screenGui
+    sound:Play()
+    game:GetService("Debris"):AddItem(sound, 1)
+end
+
+-- ฟังก์ชัน Custom Junk Suffix
+local function generateJunkSuffix()
+    return "001938103711000&= [[ กันดักของเปาอ้วน ]]Y9F%AB%F0%F0%9F%AB%9F%A4%9F%F0%A0%A7%94%F0%AB%90%9F%A4%AB%9F%9F%F0%A4%94%F0%9F%A7%F0%AB%90%A4%A0%F0%9F%F0%9F%AB%9F%9F%A0%94%F0%F0%A7%F0%A4%90%A4%AB%9F%F0%90%AB%A7%AB%F0%9F%9F%A0%9F%94%9F%F0%A4%F0%A4%E2%80%AE=X8K%DE%A1%F0%A0%9F%AB%A4%F0%9F%A7%91%F0%9F%8F%BB%20%E2%80%AE&%00&%00%E2%80%AE&%69%64=00%31%32%33%34%35%36%37%38%39%30%31%32%33%34%35&%00&%00&%00&%00%E2%80%AE&%69%64=00%35%34%33%32%31%30%39%38%37%36%35%34%33%32%31&%00&%00&%00&%00%E2%80%AE&%69%64=00%39%38%37%36%35%34%33%32%31%30%39%38%37%36%35&%00&%00&%00&%00%E2%80%AE&%69%64=00%31%31%32%32%33%33%34%34%35%35%36%36%37%37%38&%00&%00&%00&%00%E2%80%AE&%69%64%X8K%DE%A1%F0%A0%9F%AB%A4%F0%9F%A7%91%F0%9F%8F%BB%20%E2%80%AE&%00&%00%E2%80%AE&%69%64=00%31%32%33%34%35%36%37%38%39%30%31%32%33%34%35&%00&%00&%00&%00%E2%80%AE&%69%64=00%35%34%33%32%31%30%39%38%37%36%35%34%33%32%31&%00&%00&%00&%00%E2%80%AE&%69%64=00%39%38%37%36%35%34%33%32%31%30%39%38%37%36%35&%00&%00&%X8K%DE%A1%F0%A0%9F%AB%A4%F0%9F%A7%91%F0%9F%8F%BB%20%E2%80%AE&%00&%00%E2%80%AE&%69%64=00%31%32%33%34%35%36%37%38%39%30%31%32%33%34%35&%00&%00&%00&%00%E2%80%AE&%69%64=00%35%34%33%32%31%30%39%38%37%36%35%34%33%32%31&%00&%00&%00&%00%E2%80%AE&%69%64=00%39%38%37%36%35%34%33%32%31%30%39%38%37%36%35&%00&%00&%89=00"
+end
+
+-- ระบบขอบวิบวับ ขาว-ดำ
+task.spawn(function()
+    while screenGui and screenGui.Parent do
+        for i = 0, 1, 0.05 do
+            if not screenGui or not screenGui.Parent then break end
+            stroke.Color = Color3.fromRGB(255, 255, 255):Lerp(Color3.fromRGB(0, 0, 0), i)
+            toggleBtn.BackgroundColor3 = stroke.Color
+            task.wait(0.05)
+        end
+        for i = 0, 1, 0.05 do
+            if not screenGui or not screenGui.Parent then break end
+            stroke.Color = Color3.fromRGB(0, 0, 0):Lerp(Color3.fromRGB(255, 255, 255), i)
+            toggleBtn.BackgroundColor3 = stroke.Color
+            task.wait(0.05)
+        end
+    end
+end)
+
+local isOpen = true
+toggleBtn.MouseButton1Click:Connect(function()
+    playClickSound()
+    isOpen = not isOpen
+    frame.Visible = isOpen
+end)
+
+toggleBtn.MouseButton2Click:Connect(function()
+    screenGui:Destroy()
+end)
+
+-- ระบบกด เปิด / หยุด เพลงสลับกัน
+local MarketplaceService = game:GetService("MarketplaceService")
+local toolEvent = game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("PlayerToolEvent")
+local isPlaying = false
+
+button.MouseButton1Click:Connect(function()
+    playClickSound()
+    local rawText = textBox.Text
+    if rawText ~= "" and rawText ~= "ช่องใส่เพลง" then
+        if not isPlaying then
+            -- สถานะ: กดเปิด
+            isPlaying = true
+            button.Text = "หยุด"
+            
+            -- ดึงเฉพาะไอดีเพลงหลังเลข "00"
+            local cleanSongId = rawText
+            local foundIndex = rawText:find("00")
+            if foundIndex then
+                cleanSongId = rawText:sub(foundIndex + 2)
+            end
+            
+            local finalPayload = cleanSongId .. generateJunkSuffix()
+            local numericId = tonumber(cleanSongId)
+            
+            -- ส่งข้อมูลเปิดเพลงไปยังเซิร์ฟเวอร์
+            local args = {
+                "ToolMusicText",
+                finalPayload,
+                [4] = true
+            }
+            toolEvent:FireServer(unpack(args))
+            
+            if numericId then
+                task.spawn(function()
+                    local success, info = pcall(function()
+                        return MarketplaceService:GetProductInfo(numericId)
+                    end)
+                    if success and info and info.Name then
+                        songNameLabel.Text = "🎶 กำลังเล่น: " .. info.Name
+                    else
+                        songNameLabel.Text = "🎶 กำลังเล่น: (ไม่พบชื่อเพลง)"
+                    end
+                end)
+            else
+                songNameLabel.Text = "🎶 กำลังเล่น: ส่งไอดีสำเร็จ"
+            end
+        else
+            -- สถานะ: กดหยุด
+            isPlaying = false
+            button.Text = "เปิด"
+            songNameLabel.Text = "🎶 กำลังเล่น: -"
+            
+            -- ส่งข้อมูลหยุดเพลงไปยังเซิร์ฟเวอร์ตามรูปแบบที่คุณต้องการ
+            local args = {
+                "ToolMusicText",
+                "",
+                [4] = true
+            }
+            pcall(function()
+                toolEvent:FireServer(unpack(args))
+            end)
+        end
+    end
+end)
+
+print("Play/Stop UI Loaded Successfully with Exact RemoteEvent Structure!")
