@@ -1,0 +1,30 @@
+-- อ้างอิง UI และ ReplicatedStorage
+local player = game:GetService("Players").LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+
+-- หา RemoteEvent
+local playerToolEvent = replicatedStorage:WaitForChild("RE"):WaitForChild("PlayerToolEvent")
+
+-- อ้างอิงตำแหน่ง UI (ปรับชื่อตามที่คุณสร้างใน ScreenGui)
+local screenGui = script.Parent
+local frame = screenGui:WaitForChild("Frame")
+local textBox = frame:WaitForChild("TextBox")
+local sendButton = frame:WaitForChild("SendButton")
+
+-- ฟังก์ชันเมื่อกดปุ่ม
+sendButton.MouseButton1Click:Connect(function()
+    local userText = textBox.Text -- ดึงข้อความที่ผู้เล่นพิมพ์ใน TextBox
+    
+    -- จัดเตรียม Argument ตามที่คุณต้องการ
+    local args = {
+        "ToolMusicText",
+        userText, -- ใช้ข้อความจากที่ผู้เล่นพิมพ์
+        [4] = true
+    }
+    
+    -- ส่งข้อมูลไปยัง Server
+    playerToolEvent:FireServer(unpack(args))
+    
+    print("ส่งข้อความเพลงสำเร็จ: " .. userText)
+end)
