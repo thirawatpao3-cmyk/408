@@ -1,0 +1,93 @@
+import React, { useState } from 'react';
+import {
+  FluentProvider,
+  webLightTheme,
+  Button,
+  Card,
+  CardHeader,
+  Text,
+  Badge,
+  makeStyles,
+  tokens,
+} from '@fluentui/react-components';
+
+// จัดสไตล์ของคอมโพเนนต์ด้วย makeStyles
+const useStyles = makeStyles({
+  container: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: tokens.spacingHorizontalXL,
+  },
+  card: {
+    width: '320px',
+    padding: tokens.spacingHorizontalL,
+    gap: tokens.spacingVerticalM,
+  },
+  statusBox: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: tokens.spacingVerticalS,
+  },
+  buttonGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalS,
+    marginTop: tokens.spacingVerticalM,
+  },
+});
+
+export function CharacterFreezeUI() {
+  const styles = useStyles();
+  
+  // State สำหรับเก็บสถานะการแช่แข็งตัวละคร
+  const [isFrozen, setIsFrozen] = useState(false);
+
+  // ฟังก์ชันสลับสถานะ
+  const handleToggleFreeze = () => {
+    const nextState = !isFrozen;
+    setIsFrozen(nextState);
+
+    // ตรงนี้สามารถใส่ Logic สั่งงานไปยังตัวละครได้ เช่น:
+    // characterRef.current.setFreeze(nextState);
+    console.log(`สถานะตัวละคร: ${nextState ? 'แช่แข็ง' : 'ปกติ'}`);
+  };
+
+  return (
+    <FluentProvider theme={webLightTheme}>
+      <div className={styles.container}>
+        <Card className={styles.card}>
+          <CardHeader
+            header={<Text weight="semibold" size={400}>การควบคุมตัวละคร</Text>}
+            description={<Text size={200}>ระบบสั่งการสถานะตัวละคร</Text>}
+          />
+
+          {/* แสดงสถานะปัจจุบัน */}
+          <div className={styles.statusBox}>
+            <Text weight="medium">สถานะ:</Text>
+            <Badge 
+              appearance="filled" 
+              color={isFrozen ? 'tint' : 'success'}
+              size="extra-large"
+            >
+              {isFrozen ? '❄️ แช่แข็ง (Frozen)' : '🏃 ปกติ (Active)'}
+            </Badge>
+          </div>
+
+          {/* ปุ่มกดสั่งการ */}
+          <div className={styles.buttonGroup}>
+            <Button
+              appearance={isFrozen ? 'secondary' : 'primary'}
+              onClick={handleToggleFreeze}
+            >
+              {isFrozen ? 'ปลดการแช่แข็ง' : 'สั่งแช่แข็งตัวละคร'}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    </FluentProvider>
+  );
+}
+
+export default CharacterFreezeUI;
